@@ -1,0 +1,80 @@
+METADATA DATASET SINTETIS
+=========================
+
+Nama data   : Operasional Penjualan PT Graha Material Nusantara (fiktif)
+Jenis usaha : Distributor material bangunan B2B
+Periode     : 2019-01-01 s.d. 2026-10-31 (94 bulan)
+Generator   : generator.py, seed 42, dirt level sedang
+
+BERKAS
+------
+data/raw         6 CSV mentah (nama dan skema sama dengan data/cleaned)
+data/cleaned     6 CSV bersih hasil notebook
+
+Berkas                Raw        Bersih   Kolom   Keterangan
+pelanggan.csv         102        100       10      master pelanggan
+produk.csv            82         80        8       master produk
+kategori.csv          10         10        4       hierarki kategori dua tingkat
+wilayah.csv           25         24        6       kota, provinsi, region, SLA kirim
+tenaga_penjualan.csv  15         15        8       sales, 5 resign 2025-2026
+transaksi.csv         15.700     15.000    15      1 baris = 1 item pesanan
+
+KUNCI RELASI
+------------
+pelanggan.id_wilayah        -> wilayah.id_wilayah
+pelanggan.id_sales          -> tenaga_penjualan.id_sales
+produk.id_kategori          -> kategori.id_kategori
+kategori.id_kategori_induk  -> kategori.id_kategori
+transaksi.id_pelanggan      -> pelanggan.id_pelanggan
+transaksi.id_produk         -> produk.id_produk
+transaksi.id_sales          -> tenaga_penjualan.id_sales
+transaksi.nomor_pesanan     -> pengelompokan baris dalam satu pesanan
+
+KOLOM YANG TIDAK DISIMPAN (DIHITUNG SAAT ANALISIS)
+--------------------------------------------------
+omzet baris        jumlah x harga_satuan x (1 - diskon_persen / 100)
+lead time          tanggal_kirim - tanggal_transaksi
+keterlambatan      max(0, lead time - wilayah.sla_kirim_hari)
+status churn       tidak ada transaksi 180 hari
+omzet bulanan      agregasi omzet baris berstatus Selesai
+
+KOTORAN YANG DISENGAJAKAN (700 baris dibuang, sisanya diperbaiki)
+----------------------------------------------------------------
+- 300 duplikat baris utuh, 120 duplikat kunci pesanan-produk
+- 280 baris tidak valid: tanggal 0000-00-00, tanggal 2018/2027,
+  id pelanggan/produk asing, jumlah 0 atau 9999, baris kosong
+- Nilai hilang bertanda kosong, N/A, -, NULL pada harga, jumlah,
+  diskon, ongkos kirim, metode pembayaran
+- 5 format tanggal, uang berformat "Rp 1.234.567", "1,234,567", "1234567,00"
+- Id tanpa nol depan (CUST-37), status/metode/termin beda kapitalisasi
+- Duplikat dan alias pada dimensi (nama kota, provinsi, termin, segmen)
+
+DEFINISI CHURN
+--------------
+Pelanggan churn pada bulan m bila tidak ada transaksi berstatus Selesai
+atau Retur selama 180 hari setelah m. Hanya pelanggan yang sudah
+terdaftar >= 90 hari dan punya >= 2 pesanan yang dinilai.
+Ekuivalen dashboard: tidak ada pesanan >= 180 hari terakhir.
+
+POLA BISNIS YANG DITANAM
+------------------------
+- Omzet: 4,00 M (2019) -> 5,95 M (2024) -> 5,41 M (2025) -> 4,70 M
+  bila 2026 disetahunkan, turun 21% dari puncak 2024
+- Baris transaksi: 1.780 -> 2.320 (2023) -> 1.800 (2025) -> 1.464 (2026)
+- Pelanggan aktif: 47 (2019) -> 87 (2023) -> 67 (Okt 2026)
+- Churn 33 kejadian, 24 di antaranya 2024-2026, 20 dari Toko Bangunan
+- Churn Toko Bangunan 49% vs Kontraktor 4% (potret akhir periode)
+- Keterlambatan > 3 hari: 3,8% (2019) -> 17,7% (2025) -> 15,7% (2026)
+- Diskon rata-rata: 6,8% -> 14,7% (2024) -> 8,2% (2026)
+- Churn berhubungan dengan: keterlambatan 22,4% vs 13,5%, retur 7,9% vs
+  5,4%, diskon 11,4% vs 8,3% pada 6 bulan terakhir sebelum berhenti
+- Region Sumatera dan Jawa Barat punya churn tertinggi, DKI Jakarta terendah
+- Harga jual naik 3-7% per tahun sehingga penurunan volume lebih dalam
+  daripada penurunan nominal omzet
+
+CATATAN ML
+----------
+- Tidak ada kolom label di dataset; label churn diturunkan dari transaksi
+- Label churn 180 hari hanya dapat dihitung sampai snapshot April 2026
+- Deret bulanan: 94 titik, gunakan status Selesai untuk omzet
+- Panel pelanggan-bulan: 100 x 94 sel, cocok untuk GroupKFold per pelanggan
