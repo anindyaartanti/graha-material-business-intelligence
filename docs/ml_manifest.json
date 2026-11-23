@@ -1,0 +1,218 @@
+{
+  "proyek": "PT Graha Material Nusantara — Churn & Sales Forecasting",
+  "dibuat": "2026-11-24",
+  "pemilik_bagian": "Churn & Sales Forecasting (ML)",
+  "sumber_data": {
+    "dataset": "Data sintetis operasional penjualan, seed 42",
+    "periode": "2019-01-01 s.d. 2026-10-31",
+    "tabel_bersih": "data/cleaned/*.csv (6 berkas)",
+    "tabel_analitik": "data/processed/transaksi_analitik.csv"
+  },
+  "definisi": {
+    "aktivitas": "Transaksi status Selesai atau Retur; Dibatalkan tidak dihitung.",
+    "omzet": "jumlah x harga_satuan_bersih x (1 - diskon_persen/100)",
+    "churn_deskriptif": "Tidak ada aktivitas 180 hari terakhir; dinilai hanya untuk pelanggan terdaftar >=90 hari dan >=2 pesanan.",
+    "churn_label_ml": "Pada akhir bulan m, pelanggan aktif dan tidak ada aktivitas dalam 180 hari berikutnya. Label tersedia sampai April 2026.",
+    "pita_risiko": "Kuantil di antara pelanggan aktif: 20% teratas Tinggi, 30% berikutnya Sedang, sisanya Rendah."
+  },
+  "koreksi_harga": {
+    "alasan": "Notebook cleaning membaca 'Rp 231.100' sebagai 231,1 (pemisah ribuan titik).",
+    "aturan": "Harga < 1% harga acuan produk dikali 1.000; harga modal diperlakukan sama.",
+    "baris_dikoreksi": 970,
+    "persen_baris": 6.47,
+    "omzet_sebelum": 35961476076.39,
+    "omzet_sesudah": 38414792991.7,
+    "selisih": 2453316915.31,
+    "dampak": "KPI churn rate tidak terpengaruh (berbasis aktivitas), tetapi omzet, fitur monetary, dan level forecast memakai angka terkoreksi."
+  },
+  "rekomendasi": {
+    "model_churn": "ensamble",
+    "model_forecast": {
+      "omzet": "sarima",
+      "pesanan": "sarima",
+      "volume": "ensamble"
+    },
+    "cara_memilih": "Semua model tersedia per baris (kolom model); gunakan is_recommended untuk default, lalu bandingkan lewat forecast_metrics.csv."
+  },
+  "berkas_churn": [
+    {
+      "path": "data/processed/churn/churn_curve_pr.csv",
+      "baris": 562,
+      "kolom": 3,
+      "kunci": [
+        "model"
+      ],
+      "deskripsi": "Titik kurva precision-recall per model pada periode uji."
+    },
+    {
+      "path": "data/processed/churn/churn_curve_roc.csv",
+      "baris": 399,
+      "kolom": 3,
+      "kunci": [
+        "model"
+      ],
+      "deskripsi": "Titik kurva ROC per model pada periode uji."
+    },
+    {
+      "path": "data/processed/churn/churn_drivers.csv",
+      "baris": 10,
+      "kolom": 4,
+      "kunci": [
+        "metrik"
+      ],
+      "deskripsi": "Rata-rata pemicu pada baris panel churn vs bertahan."
+    },
+    {
+      "path": "data/processed/churn/churn_feature_importance.csv",
+      "baris": 29,
+      "kolom": 4,
+      "kunci": [
+        "fitur"
+      ],
+      "deskripsi": "Permutation importance model terbaik (penurunan PR-AUC)."
+    },
+    {
+      "path": "data/processed/churn/churn_model_metrics.csv",
+      "baris": 4,
+      "kolom": 16,
+      "kunci": [
+        "model"
+      ],
+      "deskripsi": "Evaluasi model: AUC, PR-AUC, recall@20%, F1, Brier, ambang."
+    },
+    {
+      "path": "data/processed/churn/churn_rate_monthly.csv",
+      "baris": 82,
+      "kolom": 4,
+      "kunci": [
+        "periode"
+      ],
+      "deskripsi": "Prevalensi churn 180 hari per bulan, 2020-2026 (tren Halaman 1)."
+    },
+    {
+      "path": "data/processed/churn/churn_scores.csv",
+      "baris": 100,
+      "kolom": 29,
+      "kunci": [
+        "id_pelanggan"
+      ],
+      "deskripsi": "Skor risiko per pelanggan: 3 model + ensambel, pita kuantil, status aktif/win-back."
+    },
+    {
+      "path": "data/processed/churn/churn_segment_risk.csv",
+      "baris": 35,
+      "kolom": 10,
+      "kunci": [
+        "dimensi",
+        "kategori"
+      ],
+      "deskripsi": "Churn historis dan risiko prediksi per jenis, segmen, region, provinsi, kanal, termin."
+    },
+    {
+      "path": "data/processed/churn/churn_snapshot_kpi.csv",
+      "baris": 1,
+      "kolom": 7,
+      "kunci": [
+        "tanggal_snapshot"
+      ],
+      "deskripsi": "KPI churn deskriptif per 31 Okt 2026 (Halaman 1)."
+    }
+  ],
+  "berkas_forecast": [
+    {
+      "path": "data/processed/forecast/forecast_backtest.csv",
+      "baris": 1512,
+      "kolom": 8,
+      "kunci": [
+        "seri",
+        "model",
+        "origin",
+        "horizon"
+      ],
+      "deskripsi": "Aktual vs prediksi pada 12 origin backtest."
+    },
+    {
+      "path": "data/processed/forecast/forecast_metrics.csv",
+      "baris": 147,
+      "kolom": 8,
+      "kunci": [
+        "seri",
+        "model",
+        "horizon"
+      ],
+      "deskripsi": "MAE, RMSE, MAPE, WAPE per model dan horizon (backtest 12 origin)."
+    },
+    {
+      "path": "data/processed/forecast/forecast_recommendation.csv",
+      "baris": 21,
+      "kolom": 8,
+      "kunci": [
+        "seri",
+        "model"
+      ],
+      "deskripsi": "Peringkat model dan penanda rekomendasi per seri."
+    },
+    {
+      "path": "data/processed/forecast/forecast_scenario.csv",
+      "baris": 3,
+      "kolom": 7,
+      "kunci": [
+        "skenario"
+      ],
+      "deskripsi": "Skenario retensi pelanggan berisiko tinggi (bukan prediksi model)."
+    },
+    {
+      "path": "data/processed/forecast/forecast_seasonality.csv",
+      "baris": 12,
+      "kolom": 4,
+      "kunci": [
+        "bulan"
+      ],
+      "deskripsi": "Indeks musiman per bulan untuk omzet, pesanan, volume."
+    },
+    {
+      "path": "data/processed/forecast/forecast_values.csv",
+      "baris": 534,
+      "kolom": 11,
+      "kunci": [
+        "seri",
+        "model",
+        "bulan"
+      ],
+      "deskripsi": "Long format seri x model x bulan: aktual, prediksi, interval 80/95, horizon."
+    }
+  ],
+  "berkas_pendukung": [
+    {
+      "path": "data/processed/transaksi_analitik.csv",
+      "baris": 15000,
+      "kolom": 38,
+      "kunci": [
+        "id_transaksi"
+      ],
+      "deskripsi": "Tabel fakta dengan harga terkoreksi, omzet, lead time, keterlambatan, dan dimensi. Sumber angka bersama untuk dashboard."
+    }
+  ],
+  "grafik": [
+    "churn_confusion_matrix.png",
+    "churn_distribusi_risiko.png",
+    "churn_feature_importance.png",
+    "churn_pemicu.png",
+    "churn_rate_bulanan.png",
+    "churn_roc_pr.png",
+    "churn_segmen_risiko.png",
+    "forecast_aktual_prediksi.png",
+    "forecast_backtest.png",
+    "forecast_dekomposisi.png",
+    "forecast_musiman.png",
+    "forecast_perbandingan_model.png"
+  ],
+  "catatan": [
+    "Dataset sintetis: 100 pelanggan dan 33 kejadian churn, metrik bisa berubah bila seed diganti.",
+    "Probabilitas churn sudah dikalibrasi; proporsi dasar sekitar 3%, jadi angka absolut kecil itu wajar.",
+    "2026 hanya 10 bulan: jangan menyetahunkan omzet 2026 tanpa penyesuaian.",
+    "Ramalan 12 bulan disediakan, tetapi bulan ke-7 sampai ke-12 belum bisa divalidasi; tampilkan 6 bulan pertama.",
+    "Harga modal produk statis sepanjang periode, sehingga tren margin sebagian artefak data.",
+    "Angka dashboard harus memakai data/processed (bukan data/cleaned langsung) agar konsisten dengan notebook."
+  ]
+}
